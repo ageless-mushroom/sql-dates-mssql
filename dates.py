@@ -254,6 +254,9 @@ def is_floating_holiday(this_date: date) -> bool:
     # Martin Luther King Jr. Day (Third Monday of January)
     mlk_day = nth_weekday_of_month(3, 2, 1, year)
 
+    # Memorial Day (Last Monday in May)
+    memorial_day = this_date.month == 5 and is_monday and this_date.day >= 25
+
     # Labor Day (First Monday in September)
     labor_day = nth_weekday_of_month(1, 2, 9, year)
 
@@ -262,9 +265,6 @@ def is_floating_holiday(this_date: date) -> bool:
 
     # Black Friday (Day after Thanksgiving)
     black_friday = thanksgiving + timedelta(days=1)
-
-    # Memorial Day (Last Monday in May)
-    memorial_day = this_date.month == 5 and is_monday and this_date.day >= 25
 
     return (
         this_date in {labor_day, thanksgiving, black_friday}
@@ -313,9 +313,10 @@ def create_dates(start: date, end: date) -> pd.DataFrame:
     date_range = pd.date_range(start, end)
     dates = pd.DataFrame({"DateDate": date_range})
 
-    dates["DateYear"] = dates["DateDate"].dt.year
-    dates["DateMonth"] = dates["DateDate"].dt.month
-    dates["DateDay"] = dates["DateDate"].dt.day
+    dates["DateDate"] = dates["DateDate"].dt.date
+    dates["DateYear"] = dates["DateDate"].apply(lambda x: x.year)
+    dates["DateMonth"] = dates["DateDate"].apply(lambda x: x.month)
+    dates["DateDay"] = dates["DateDate"].apply(lambda x: x.day)
     dates["DateDayOfWeek"] = dates["DateDate"].apply(to_sql_weekday)
     dates["IsLastDayOfMonth"] = dates["DateDate"].apply(is_last_day_of_month)
     dates["IsWeekend"] = dates["DateDayOfWeek"].apply(is_weekend)
@@ -340,17 +341,18 @@ def fill_pay_days(dates: pd.DataFrame) -> None:
     assert not dates.empty
 
     current = date(2011, 1, 7)
-    max_date = dates["DateDate"].max().date()
+    max_date = dates["DateDate"].max()
 
     while current <= max_date:
+        pay_day = current
         # Shift the pay date to Thursday if it falls on a holiday, except for
         # Black Friday
         black_friday = nth_weekday_of_month(4, 5, 11, current.year) + timedelta(days=1)
         is_bf = current == black_friday
         if is_holiday(current) and not is_bf:
-            current -= timedelta(days=1)
+            pay_day -= timedelta(days=1)
 
-        dates.loc[dates["DateDate"] == pd.Timestamp(current), "IsPayDay"] = True
+        dates.loc[dates["DateDate"] == pay_day, "IsPayDay"] = True
         current += timedelta(days=14)
 
 
