@@ -100,24 +100,7 @@ def get_pay_periods(dates: pd.DataFrame) -> pd.DataFrame:
     # Start date = 1994-01-09 (PP 199401)
     index = 1
     pp_number = 1
-    records = []
-    pay_periods = {
-        "PayPeriodID": [],
-        "StartDate": [],
-        "EndDate": [],
-        "PPIndex": [],
-        "PPNumber": [],
-        "YearStart": [],
-        "YearEnd": [],
-        "IsSplitYear": [],
-        "Holidays": [],
-        "WorkDaysInYearStart": [],
-        "WorkDaysInYearEnd": [],
-        "HoursInYearStart": [],
-        "HoursInYearEnd": [],
-        "PayDate": [],
-        "PayYear": [],
-    }
+    pay_periods = []
 
     current = FIRST_PAY_PERIOD_START
     # Stop at the end of PP25 because `dates` doesn't contain a full PP26
@@ -131,7 +114,7 @@ def get_pay_periods(dates: pd.DataFrame) -> pd.DataFrame:
         in_range = dates["DateDate"].between(current, end_date)
         day_counts = get_day_counts(dates[in_range], year_start, year_end)
 
-        record = {
+        pay_period = {
             "PayPeriodID": int(f"{year_start}{pp_number:02d}"),
             "StartDate": current,
             "EndDate": end_date,
@@ -148,8 +131,7 @@ def get_pay_periods(dates: pd.DataFrame) -> pd.DataFrame:
             "PayDate": pay_date,
             "PayYear": pay_date.year,
         }
-        logging.info(f"Generated PayPeriod {record['PayPeriodID']}")
-        records.append(record)
+        pay_periods.append(pay_period)
 
         # If the period doesn't cross the year boundary (and isn't the last one),
         # increment PP number
