@@ -313,6 +313,7 @@ def create_dates(start: date, end: date) -> pd.DataFrame:
     date_range = pd.date_range(start, end)
     dates = pd.DataFrame({"DateDate": date_range})
 
+    # Convert from Pandas Timestamp to Python date for easier processing
     dates["DateDate"] = dates["DateDate"].dt.date
     dates["DateYear"] = dates["DateDate"].apply(lambda x: x.year)
     dates["DateMonth"] = dates["DateDate"].apply(lambda x: x.month)

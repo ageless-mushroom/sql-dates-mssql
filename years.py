@@ -52,21 +52,17 @@ def get_years(dates: pd.DataFrame, pay_periods: pd.DataFrame) -> pd.DataFrame:
     work_days = dates[dates["IsWorkDay"]].groupby("DateYear").size().rename("WorkDays")
     years = inner_join(years, work_days, "DateYear")
 
-    # Holidays
     holidays = dates[dates["IsHoliday"]].groupby("DateYear").size().rename("Holidays")
     years = inner_join(years, holidays, "DateYear")
 
-    # Weekdays
     weekdays = dates[~dates["IsWeekend"]].groupby("DateYear").size().rename("WeekDays")
     years = inner_join(years, weekdays, "DateYear")
 
-    # Weekends
     weekend_days = (
         dates[dates["IsWeekend"]].groupby("DateYear").size().rename("WeekendDays")
     )
     years = inner_join(years, weekend_days, "DateYear")
 
-    # Work hours
     work_hours = weekdays * WORK_HOURS_PER_DAY
     work_hours.name = "WorkHours"
     years = inner_join(years, work_hours, "DateYear")
@@ -81,7 +77,6 @@ def get_years(dates: pd.DataFrame, pay_periods: pd.DataFrame) -> pd.DataFrame:
     years = left_join(years, pay_period_counts, "DateYear")
     years["PayPeriods"] = years["PayPeriods"].fillna(0).astype(int)
 
-    # Leap year indicator
     years["IsLeap"] = years["DateYear"].apply(isleap)
 
     # U.S. presidential election years (every 4 years, divisible by 4)
