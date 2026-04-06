@@ -49,9 +49,13 @@ def adjust_pay_date(pay_date: date, pay_period_start: date) -> date:
     """
     # Shift the pay date to Thursday if it falls on a holiday, except for Black
     # Friday
-    is_bf = pay_period_start == nth_weekday_of_month(4, 6, 11, pay_period_start.year)
+    thanksgiving = nth_weekday_of_month(4, 5, 11, pay_period_start.year)
+    black_friday = thanksgiving + timedelta(days=1)
+    is_bf = pay_period_start == black_friday
     if is_holiday(pay_date) and not is_bf:
         return pay_date - timedelta(days=1)
+
+    return pay_date
 
 
 def get_day_counts(

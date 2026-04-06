@@ -260,14 +260,14 @@ def is_floating_holiday(this_date: date) -> bool:
     # Thanksgiving Day (Fourth Thursday in November)
     thanksgiving = nth_weekday_of_month(4, 5, 11, year)
 
-    # Day after Thanksgiving (Fourth Friday in November)
-    day_after_thanksgiving = nth_weekday_of_month(4, 6, 11, year)
+    # Black Friday (Day after Thanksgiving)
+    black_friday = thanksgiving + timedelta(days=1)
 
     # Memorial Day (Last Monday in May)
     memorial_day = this_date.month == 5 and is_monday and this_date.day >= 25
 
     return (
-        this_date in {labor_day, thanksgiving, day_after_thanksgiving}
+        this_date in {labor_day, thanksgiving, black_friday}
         or (this_date == mlk_day and year >= 1986)  # MLK Day
         or memorial_day
     )
@@ -345,7 +345,8 @@ def fill_pay_days(dates: pd.DataFrame) -> None:
     while current <= max_date:
         # Shift the pay date to Thursday if it falls on a holiday, except for
         # Black Friday
-        is_bf = current == nth_weekday_of_month(4, 6, 11, current.year)
+        black_friday = nth_weekday_of_month(4, 5, 11, current.year) + timedelta(days=1)
+        is_bf = current == black_friday
         if is_holiday(current) and not is_bf:
             current -= timedelta(days=1)
 
