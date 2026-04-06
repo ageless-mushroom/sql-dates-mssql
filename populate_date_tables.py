@@ -77,7 +77,7 @@ def generate_and_store_data(config: dict[str, Any]) -> None:
         logging.info("Data successfully written to database.")
 
     except Exception as e:
-        logging.exception("An error occurred while generating or writing data.")
+        logging.exception("An error occurred while generating or writing data: %s", e)
         raise
 
 
