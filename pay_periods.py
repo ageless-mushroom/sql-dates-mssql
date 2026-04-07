@@ -27,13 +27,17 @@ class DayCounts:
 
     Attributes:
         holidays: Number of holidays in the pay period.
-        days_in_year_start: Number of work days in the first year of the period.
-        days_in_year_end: Number of work days in the second year of the period.
+        days_in_year_start: Number of business days in the first year of the period.
+        days_in_year_end: Number of business days in the second year of the period.
+        work_days_in_year_start: Number of work days in the first year of the period.
+        work_days_in_year_end: Number of work days in the second year of the period.
     """
 
     holidays: int
     days_in_year_start: int
     days_in_year_end: int
+    work_days_in_year_start: int
+    work_days_in_year_end: int
 
 
 def adjust_pay_date(pay_date: date, pay_period_start: date) -> date:
@@ -77,14 +81,18 @@ def get_day_counts(
     is_end_year = dates["DateYear"] == year_end
     is_weekday = ~dates["IsWeekend"]
 
-    holidays = dates["IsHoliday"].sum()
-    start_work_days = (is_start_year & is_weekday).sum()
-    end_work_days = (is_end_year & is_weekday).sum()
+    holidays = int(dates["IsHoliday"].sum())
+    start_holidays = int(dates[is_start_year]["IsHoliday"].sum())
+    end_holidays = int(dates[is_end_year]["IsHoliday"].sum())
+    start_work_days = int((is_start_year & is_weekday).sum())
+    end_work_days = int((is_end_year & is_weekday).sum())
 
     return DayCounts(
-        holidays=int(holidays),
-        days_in_year_start=int(start_work_days),
-        days_in_year_end=int(end_work_days),
+        holidays=holidays,
+        days_in_year_start=start_work_days,
+        days_in_year_end=end_work_days,
+        work_days_in_year_start=start_work_days - start_holidays,
+        work_days_in_year_end=end_work_days - end_holidays,
     )
 
 
@@ -118,18 +126,24 @@ def get_pay_periods(dates: pd.DataFrame) -> pd.DataFrame:
             "PayPeriodID": int(f"{year_start}{pp_number:02d}"),
             "StartDate": current,
             "EndDate": end_date,
+            "PayDate": pay_date,
+            "PayYear": pay_date.year,
             "PPIndex": index,
             "PPNumber": pp_number,
             "YearStart": year_start,
             "YearEnd": year_end,
             "IsSplitYear": year_start != year_end,
             "Holidays": day_counts.holidays,
-            "WorkDaysInYearStart": day_counts.days_in_year_start,
-            "WorkDaysInYearEnd": day_counts.days_in_year_end,
+            "DaysInYearStart": day_counts.days_in_year_start,
+            "DaysInYearEnd": day_counts.days_in_year_end,
             "HoursInYearStart": day_counts.days_in_year_start * WORK_HOURS_PER_DAY,
             "HoursInYearEnd": day_counts.days_in_year_end * WORK_HOURS_PER_DAY,
-            "PayDate": pay_date,
-            "PayYear": pay_date.year,
+            "WorkDaysInYearStart": day_counts.work_days_in_year_start,
+            "WorkDaysInYearEnd": day_counts.work_days_in_year_end,
+            "WorkHoursInYearStart": (
+                day_counts.work_days_in_year_start * WORK_HOURS_PER_DAY
+            ),
+            "WorkHoursInYearEnd": day_counts.work_days_in_year_end * WORK_HOURS_PER_DAY,
         }
         pay_periods.append(pay_period)
 
